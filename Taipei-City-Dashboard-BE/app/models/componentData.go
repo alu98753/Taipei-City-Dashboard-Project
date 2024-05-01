@@ -341,3 +341,65 @@ func GetMapLegendData(query *string, timeFrom string, timeTo string) (chartData 
 
 	return chartData, nil
 }
+
+func GetComponentSurveyDataQuery(id int, timeFrom string, timeTo string) (queryHistory string, err error) {
+	var historyDataQuery HistoryDataQuery
+
+	err = DBManager.
+		Table("components").
+		Select("query_history").
+		Where("components.id = ?", id).
+		Find(&historyDataQuery).Error
+	if err != nil {
+		return queryHistory, err
+	}
+	if historyDataQuery.QueryHistory == "" {
+		return historyDataQuery.QueryHistory, err
+	}
+
+	var timeStepUnit string
+
+	timeFromTime, err := time.Parse("2006-01-02T15:04:05+08:00", timeFrom)
+	if err != nil {
+		return queryHistory, err
+	}
+	timeToTime, err := time.Parse("2006-01-02T15:04:05+08:00", timeTo)
+	if err != nil {
+		return queryHistory, err
+	}
+
+	/*
+			timesteps are automatically determined based on the time range:
+		  - Within 24hrs: hour
+		  - Within 1 month: day
+		  - Within 3 months: week
+		  - Within 2 years: month
+		  - More than 2 years: year
+	*/
+	if timeToTime.Sub(timeFromTime).Hours() <= 24 {
+		timeStepUnit = "hour" // Within 24hrs
+	} else if timeToTime.Sub(timeFromTime).Hours() < 24*32 {
+		timeStepUnit = "day" // Within 1 month
+	} else if timeToTime.Sub(timeFromTime).Hours() < 24*93 {
+		timeStepUnit = "week" // Within 3 months
+	} else if timeToTime.Sub(timeFromTime).Hours() < 24*740 {
+		timeStepUnit = "month" // Within 2 years
+	} else {
+		timeStepUnit = "year" // More than 2 years
+	}
+
+	// Insert the time range and timestep unit into the query
+	var queryInsertStrings []any
+
+	if strings.Count(historyDataQuery.QueryHistory, "%s")%3 != 0 {
+		return queryHistory, fmt.Errorf("invalid query string")
+	}
+
+	for i := 0; i < strings.Count(historyDataQuery.QueryHistory, "%s")/3; i++ {
+		queryInsertStrings = append(queryInsertStrings, timeStepUnit, timeFrom, timeTo)
+	}
+
+	historyDataQuery.QueryHistory = fmt.Sprintf(historyDataQuery.QueryHistory, queryInsertStrings...)
+
+	return historyDataQuery.QueryHistory, nil
+}
