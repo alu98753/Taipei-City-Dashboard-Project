@@ -1,0 +1,17 @@
+UPDATE public."TpiLight"
+SET " Dist" = 
+    CASE
+        WHEN " Dist" = '北投' THEN '北投區'
+        WHEN " Dist" = '士林' THEN '士林區'
+        WHEN " Dist" = '內湖' THEN '內湖區'
+        WHEN " Dist" = '南港' THEN '南港區'
+        WHEN " Dist" = '松山' THEN '松山區'
+        WHEN " Dist" = '信義' THEN '信義區'
+        WHEN " Dist" = '中山' THEN '中山區'
+        WHEN " Dist" = '大同' THEN '大同區'
+        WHEN " Dist" = '中正' THEN '中正區'
+        WHEN " Dist" = '萬華' THEN '萬華區'
+        WHEN " Dist" = '大安' THEN '大安區'
+        WHEN " Dist" = '文山' THEN '文山區'
+        ELSE " Dist"
+    END;

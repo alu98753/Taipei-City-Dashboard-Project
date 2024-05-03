@@ -48,7 +48,7 @@ dist.tar.gz
 go.work
 
 # .env files except for template
-docker/.env
+# docker/.env
 Taipei-City-Dashboard-FE/.env
 Taipei-City-Dashboard-FE/.env.development
 Taipei-City-Dashboard-FE/.env.production
@@ -56,6 +56,6 @@ Taipei-City-Dashboard-FE/.env.test
 
 # docker-compose
 # db data
-docker/db-data
+# docker/db-data
 # nginx ssl
 docker/nginx/ssl

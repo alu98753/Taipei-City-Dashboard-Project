@@ -1,29 +1,48 @@
-# 地址转换服务流程如 Google 地图 API 或 OpenStreetMap Nominatim API，
-# 
-# 将地址转换为经纬度坐标。然后，你可以使用 Python 脚本来将 CSV 文件中的地址转换为经纬度坐标，并将其保存到新的 CSV 文件中。以下是一个示例代码：
-
+from geopy.geocoders import GoogleV3
 import pandas as pd
-from geopy.geocoders import Nominatim
+import time
+import re
+
+#宣告 Google Maps geolocator
+geolocator = GoogleV3(api_key="AIzaSyCbRrVk1gKRZRDHnQwRDcp6dw9ZINmZLfs")  # 請替換成你的 Google API 金鑰
 
 # 读取 CSV 文件
-data = pd.read_csv("C:\Side_Project\Tpi-Data\safe112.csv")
+data = pd.read_csv("C:\\Side_Project\\Tpi-Data\\monitor-raw.csv")
 
-# 创建 Geocoder 对象
-geolocator = Nominatim(user_agent="geoapiExercises")
-
-# 定义一个函数来获取地点的经纬度坐标
-def get_coordinates(address):
-    location = geolocator.geocode(address)
-    if location:
-        return location.latitude, location.longitude
-    else:
-        return None, None
-
-# 将地址转换为经纬度坐标
-data['Latitude'], data['Longitude'] = zip(*data['地點位置'].apply(get_coordinates))
-
-# 保存为新的 CSV 文件
-data.to_csv('SafeHavenSpot112.csv', index=False)
+# 創建新的欄位來存放經緯度資訊
+data["longitude"] = None
+data["latitude"] = None
+index_to_drop = []  # 用於儲存要刪除的行的索引
 
 
-# 这段代码将从你的 CSV 文件中读取地址信息，然后使用 Nominatim API 将地址转换为经纬度坐标，并将它们添加到 DataFrame 中。最后，它将保存包含经纬度信息的新 CSV 文件。记得替换 `'your_file.csv'` 为你的 CSV 文件路径。
+# 設定要查詢的地址
+for index, row in data.iterrows():
+	matches = re.search(r'(\w+[路街段道])(\d+段)?(\d+巷)?(\d+弄)?(\w+)?(\d+[-]?\d*號)?', row["安裝地址"].strip())
+						# r'(\w+[路街段道])(\d+段)?(\d+巷)?(\d+弄)?(\w+)?(\d+號)'
+						# r'(\w+[路街段道])(\d+段)?(\d+巷)?(\d+弄)?(\d+號)?(\d+號)?'
+						# r'(\w+[路街段道])(\d+段)?(\d+巷)?(\d+弄)?(\d+號)?'
+
+	if matches:    
+		location = geolocator.geocode(matches.group(0))
+
+		if location:
+			# 更新 DataFrame 中的經緯度資訊
+			data.at[index, "longitude"] = location.longitude
+			data.at[index, "latitude"] = location.latitude
+
+			# 顯示地址及其對應的經緯度
+			print(row["安裝地址"], (location.longitude, location.latitude),"group(0): ",matches.group(0))
+		else:
+			# 如果無法找到地址對應的經緯度，則輸出錯誤訊息
+			print("無法找到地址對應的經緯度:", row["安裝地址"] ,"group(0): ",matches.group(0))
+			index_to_drop.append(index)
+	else:
+		# 如果無法找到地址對應的經緯度，則輸出錯誤訊息
+		print("找不到符合格式的地址:", row["安裝地址"])
+		index_to_drop.append(index)
+  
+# 刪除要刪除的行
+data.drop(index_to_drop, inplace=True)
+
+# 將帶有經緯度資訊的 DataFrame 保存為新的 CSV 文件
+# data.to_csv("C:\\Side_Project\\Tpi-Data\\monitor-coordinates.csv", index=False)
