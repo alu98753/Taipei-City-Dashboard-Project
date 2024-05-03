@@ -68,7 +68,16 @@ func configureComponentRoutes() {
 		componentRoutes.
 			GET("/:id/chart", controllers.GetComponentChartData)
 		componentRoutes.GET("/:id/history", controllers.GetComponentHistoryData)
+		// get roads' name, API is /component/:id/road
+		// componentRoutes.GET("/:id/road", )
+		// // get survey data, API is /component/:id/survey
+		// componentRoutes.GET("/:id/survey", controllers.GetComponentSurveyData)
 	}
+	// componentRoutes.Use(middleware.IsLoggedIn())
+	// {
+	// 	// Submitting opinion survey needs login
+	// 	componentRoutes.PATCH("/me", controllers.)
+	// }
 	componentRoutes.Use(middleware.IsSysAdm())
 	{
 		componentRoutes.

@@ -343,6 +343,7 @@ func GetMapLegendData(query *string, timeFrom string, timeTo string) (chartData 
 }
 
 func GetComponentSurveyDataQuery(id int, timeFrom string, timeTo string) (queryHistory string, err error) {
+	// Under construction
 	var historyDataQuery HistoryDataQuery
 
 	err = DBManager.
@@ -403,3 +404,14 @@ func GetComponentSurveyDataQuery(id int, timeFrom string, timeTo string) (queryH
 
 	return historyDataQuery.QueryHistory, nil
 }
+
+// func GetComponentRoadDataQuery(id int, timeFrom string, timeTo string) (queryHistory string, err error) {
+// 	// Under construction
+	
+// 	// Insert the time range and timestep unit into the query
+// 	var queryInsertStrings []any
+
+	
+
+// 	return historyDataQuery.QueryHistory, nil
+// }

@@ -112,7 +112,7 @@ func GetComponentHistoryData(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": "success", "data": chartData})
 }
 
-func GetComponentSurvyData(c *gin.Context) {
+func GetComponentSurveyData(c *gin.Context) {
 	// 1. Get the component id from the URL
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
@@ -123,7 +123,7 @@ func GetComponentSurvyData(c *gin.Context) {
 	timeFrom, timeTo := util.GetTime(c)
 
 	// 2. Get the history data query from the database
-	queryHistory, err := models.GetComponentHistoryDataQuery(id, timeFrom, timeTo)
+	queryHistory, err := models.GetComponentSurveyDataQuery(id, timeFrom, timeTo)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": err.Error()})
 		return
@@ -141,3 +141,4 @@ func GetComponentSurvyData(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"status": "success", "data": chartData})
 }
+
