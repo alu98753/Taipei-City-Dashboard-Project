@@ -68,8 +68,8 @@ func configureComponentRoutes() {
 		componentRoutes.
 			GET("/:id/chart", controllers.GetComponentChartData)
 		componentRoutes.GET("/:id/history", controllers.GetComponentHistoryData)
-		// get roads' name, API is /component/:id/road
-		componentRoutes.GET("/:id/road", controllers.GetRoadData)
+		// get roads' name, API is /component/road/:id
+		componentRoutes.GET("/road/:id", controllers.GetRoadData)
 		// // get survey data, API is /component/:id/survey
 		// componentRoutes.GET("/:id/survey", controllers.GetComponentSurveyData)
 	}

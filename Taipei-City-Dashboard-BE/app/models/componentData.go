@@ -43,8 +43,8 @@ type TwoDimensionalDataOutput struct {
 }
 
 type MyData struct {
-	Xaxis string `gorm:"column:x_axis" json:"x"`
-	Data string `gorm:"column:data" json:"y"`
+	Xaxis string `gorm:"column:place_name" json:"x"`
+	Data string `gorm:"column:town" json:"y"`
 }
 type MyDataOutput struct {
 	Data []MyData `json:"data"`
@@ -351,74 +351,75 @@ func GetMapLegendData(query *string, timeFrom string, timeTo string) (chartData 
 	return chartData, nil
 }
 
-func GetRoadData(id int) ([]MyData, error) {
-	var data []MyData
+func GetRoadData(id int) (roadOutput []MyDataOutput, err error) {
+	var road []MyData
 
 	// 從資料庫中擷取數據
 	switch id {
 		case 0:		// 北投區
-			err := DBManager.Table("Taipei_Road").Select("town").Where("column1 = ?", "信義區").Find(&data).Error
+			err := DBDashboard.Table("Taipei_Road").Select("place_name","town").Where("town = ?", "信義區").Find(&road).Error
 			if err != nil {
 				return nil, err
 			}
 		case 1:		// 士林區
-			err := DBManager.Table("Taipei_Road").Select("town").Where("column1 = ?", "士林區").Find(&data).Error
+			err := DBDashboard.Table("Taipei_Road").Select("place_name","town").Where("town = ?", "士林區").Find(&road).Error
 			if err != nil {
 				return nil, err
 			}
 		case 2:		// 內湖區
-			err := DBManager.Table("Taipei_Road").Select("town").Where("column1 = ?", "內湖區").Find(&data).Error
+			err := DBDashboard.Table("Taipei_Road").Select("place_name","town").Where("town = ?", "內湖區").Find(&road).Error
 			if err != nil {
 				return nil, err
 			}
 		case 3:		//南港區
-			err := DBManager.Table("Taipei_Road").Select("town").Where("column1 = ?", "南港區").Find(&data).Error
+			err := DBDashboard.Table("Taipei_Road").Select("place_name","town").Where("town = ?", "南港區").Find(&road).Error
 			if err != nil {
 				return nil, err
 			}
 		case 4:		// 松山區
-			err := DBManager.Table("Taipei_Road").Select("town").Where("column1 = ?", "松山區").Find(&data).Error
+			err := DBDashboard.Table("Taipei_Road").Select("place_name","town").Where("town = ?", "松山區").Find(&road).Error
 			if err != nil {
 				return nil, err
 			}
 		case 5:		// 信義區
-			err := DBManager.Table("Taipei_Road").Select("town").Where("column1 = ?", "信義區").Find(&data).Error
+			err := DBDashboard.Table("Taipei_Road").Select("place_name","town").Where("town = ?", "信義區").Find(&road).Error
 			if err != nil {
 				return nil, err
 			}
 		case 6:		// 中山區
-			err := DBManager.Table("Taipei_Road").Select("town").Where("column1 = ?", "中山區").Find(&data).Error
+			err := DBDashboard.Table("Taipei_Road").Select("place_name","town").Where("town = ?", "中山區").Find(&road).Error
 			if err != nil {
 				return nil, err
 			}
 		case 7:		// 大同區
-			err := DBManager.Table("Taipei_Road").Select("town").Where("column1 = ?", "大同區").Find(&data).Error
+			err := DBDashboard.Table("Taipei_Road").Select("place_name","town").Where("town = ?", "大同區").Find(&road).Error
 			if err != nil {
 				return nil, err
 			}
 		case 8:		// 中正區
-			err := DBManager.Table("Taipei_Road").Select("town").Where("column1 = ?", "中正區").Find(&data).Error
+			err := DBDashboard.Table("Taipei_Road").Select("place_name","town").Where("town = ?", "中正區").Find(&road).Error
 			if err != nil {
 				return nil, err
 			}
 		case 9:		// 萬華區
-			err := DBManager.Table("Taipei_Road").Select("town").Where("column1 = ?", "萬華區").Find(&data).Error
+			err := DBDashboard.Table("Taipei_Road").Select("place_name","town").Where("town = ?", "萬華區").Find(&road).Error
 			if err != nil {
 				return nil, err
 			}
 		case 10:	//大安區
-			err := DBManager.Table("Taipei_Road").Select("town").Where("column1 = ?", "大安區").Find(&data).Error
+			err := DBDashboard.Table("Taipei_Road").Select("place_name","town").Where("town = ?", "大安區").Find(&road).Error
 			if err != nil {
 				return nil, err
 			}
 		case 11:	// 文山區
-			err := DBManager.Table("Taipei_Road").Select("town").Where("column1 = ?", "文山區").Find(&data).Error
+			err := DBDashboard.Table("Taipei_Road").Select("place_name","town").Where("town = ?", "文山區").Find(&road).Error
 			if err != nil {
 				return nil, err
 			}
 	}
+	roadOutput = append(roadOutput, MyDataOutput{Data: road})
 
-	return data, nil
+	return roadOutput, nil
 }
 
 

@@ -115,32 +115,24 @@ func GetComponentHistoryData(c *gin.Context) {
 
 func GetRoadData(c *gin.Context) {
 	// 1. Get the component id from the URL
+
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "Invalid component ID"})
 		return
 	}
 
-	timeFrom, timeTo := util.GetTime(c)
-
-	// 2. Get the road data query from the database
-	queryHistory, err := models.GetComponentHistoryDataQuery(id, timeFrom, timeTo)
-	if err != nil {
+	queryResult, err := models.GetRoadData(id)
+	if err != nil{
 		c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": err.Error()})
 		return
 	}
-	if queryHistory == "" {
-		c.JSON(http.StatusNotFound, gin.H{"status": "error", "message": "No history data available"})
+	if len(queryResult) == 0 || len(queryResult[0].Data) == 0 {
+		c.JSON(http.StatusNotFound, gin.H{"status": "error", "message": "No Road data available"})
 		return
 	}
-
-	// 3. Get and parse the data
-	chartData, err := models.GetTimeSeriesData(&queryHistory, timeFrom, timeTo)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": err.Error()})
-		return
-	}
-	c.JSON(http.StatusOK, gin.H{"status": "success", "data": chartData})
+	
+	c.JSON(http.StatusOK, gin.H{"status": "success", "data": queryResult})
 }
 
 // func GetComponentSurveyData(c *gin.Context) {
