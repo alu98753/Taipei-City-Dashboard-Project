@@ -42,6 +42,15 @@ type TwoDimensionalDataOutput struct {
 	Data []TwoDimensionalData `json:"data"`
 }
 
+type MyData struct {
+	Xaxis string `gorm:"column:x_axis" json:"x"`
+	Data string `gorm:"column:data" json:"y"`
+}
+type MyDataOutput struct {
+	Data []MyData `json:"data"`
+}
+
+
 /*
 ThreeDimensionalData & PercentData Json Format:
 
@@ -342,76 +351,136 @@ func GetMapLegendData(query *string, timeFrom string, timeTo string) (chartData 
 	return chartData, nil
 }
 
-func GetComponentSurveyDataQuery(id int, timeFrom string, timeTo string) (queryHistory string, err error) {
-	// Under construction
-	var historyDataQuery HistoryDataQuery
+func GetRoadData(id int) ([]MyData, error) {
+	var data []MyData
 
-	err = DBManager.
-		Table("components").
-		Select("query_history").
-		Where("components.id = ?", id).
-		Find(&historyDataQuery).Error
-	if err != nil {
-		return queryHistory, err
+	// 從資料庫中擷取數據
+	switch id {
+		case 0:		// 北投區
+			err := DBManager.Table("Taipei_Road").Select("town").Where("column1 = ?", "信義區").Find(&data).Error
+			if err != nil {
+				return nil, err
+			}
+		case 1:		// 士林區
+			err := DBManager.Table("Taipei_Road").Select("town").Where("column1 = ?", "士林區").Find(&data).Error
+			if err != nil {
+				return nil, err
+			}
+		case 2:		// 內湖區
+			err := DBManager.Table("Taipei_Road").Select("town").Where("column1 = ?", "內湖區").Find(&data).Error
+			if err != nil {
+				return nil, err
+			}
+		case 3:		//南港區
+			err := DBManager.Table("Taipei_Road").Select("town").Where("column1 = ?", "南港區").Find(&data).Error
+			if err != nil {
+				return nil, err
+			}
+		case 4:		// 松山區
+			err := DBManager.Table("Taipei_Road").Select("town").Where("column1 = ?", "松山區").Find(&data).Error
+			if err != nil {
+				return nil, err
+			}
+		case 5:		// 信義區
+			err := DBManager.Table("Taipei_Road").Select("town").Where("column1 = ?", "信義區").Find(&data).Error
+			if err != nil {
+				return nil, err
+			}
+		case 6:		// 中山區
+			err := DBManager.Table("Taipei_Road").Select("town").Where("column1 = ?", "中山區").Find(&data).Error
+			if err != nil {
+				return nil, err
+			}
+		case 7:		// 大同區
+			err := DBManager.Table("Taipei_Road").Select("town").Where("column1 = ?", "大同區").Find(&data).Error
+			if err != nil {
+				return nil, err
+			}
+		case 8:		// 中正區
+			err := DBManager.Table("Taipei_Road").Select("town").Where("column1 = ?", "中正區").Find(&data).Error
+			if err != nil {
+				return nil, err
+			}
+		case 9:		// 萬華區
+			err := DBManager.Table("Taipei_Road").Select("town").Where("column1 = ?", "萬華區").Find(&data).Error
+			if err != nil {
+				return nil, err
+			}
+		case 10:	//大安區
+			err := DBManager.Table("Taipei_Road").Select("town").Where("column1 = ?", "大安區").Find(&data).Error
+			if err != nil {
+				return nil, err
+			}
+		case 11:	// 文山區
+			err := DBManager.Table("Taipei_Road").Select("town").Where("column1 = ?", "文山區").Find(&data).Error
+			if err != nil {
+				return nil, err
+			}
 	}
-	if historyDataQuery.QueryHistory == "" {
-		return historyDataQuery.QueryHistory, err
-	}
 
-	var timeStepUnit string
-
-	timeFromTime, err := time.Parse("2006-01-02T15:04:05+08:00", timeFrom)
-	if err != nil {
-		return queryHistory, err
-	}
-	timeToTime, err := time.Parse("2006-01-02T15:04:05+08:00", timeTo)
-	if err != nil {
-		return queryHistory, err
-	}
-
-	/*
-			timesteps are automatically determined based on the time range:
-		  - Within 24hrs: hour
-		  - Within 1 month: day
-		  - Within 3 months: week
-		  - Within 2 years: month
-		  - More than 2 years: year
-	*/
-	if timeToTime.Sub(timeFromTime).Hours() <= 24 {
-		timeStepUnit = "hour" // Within 24hrs
-	} else if timeToTime.Sub(timeFromTime).Hours() < 24*32 {
-		timeStepUnit = "day" // Within 1 month
-	} else if timeToTime.Sub(timeFromTime).Hours() < 24*93 {
-		timeStepUnit = "week" // Within 3 months
-	} else if timeToTime.Sub(timeFromTime).Hours() < 24*740 {
-		timeStepUnit = "month" // Within 2 years
-	} else {
-		timeStepUnit = "year" // More than 2 years
-	}
-
-	// Insert the time range and timestep unit into the query
-	var queryInsertStrings []any
-
-	if strings.Count(historyDataQuery.QueryHistory, "%s")%3 != 0 {
-		return queryHistory, fmt.Errorf("invalid query string")
-	}
-
-	for i := 0; i < strings.Count(historyDataQuery.QueryHistory, "%s")/3; i++ {
-		queryInsertStrings = append(queryInsertStrings, timeStepUnit, timeFrom, timeTo)
-	}
-
-	historyDataQuery.QueryHistory = fmt.Sprintf(historyDataQuery.QueryHistory, queryInsertStrings...)
-
-	return historyDataQuery.QueryHistory, nil
+	return data, nil
 }
 
-// func GetComponentRoadDataQuery(id int, timeFrom string, timeTo string) (queryHistory string, err error) {
+
+// func GetComponentSurveyDataQuery(id int, timeFrom string, timeTo string) (queryHistory string, err error) {
 // 	// Under construction
-	
+// 	var historyDataQuery HistoryDataQuery
+
+// 	err = DBManager.
+// 		Table("components").
+// 		Select("query_history").
+// 		Where("components.id = ?", id).
+// 		Find(&historyDataQuery).Error
+// 	if err != nil {
+// 		return queryHistory, err
+// 	}
+// 	if historyDataQuery.QueryHistory == "" {
+// 		return historyDataQuery.QueryHistory, err
+// 	}
+
+// 	var timeStepUnit string
+
+// 	timeFromTime, err := time.Parse("2006-01-02T15:04:05+08:00", timeFrom)
+// 	if err != nil {
+// 		return queryHistory, err
+// 	}
+// 	timeToTime, err := time.Parse("2006-01-02T15:04:05+08:00", timeTo)
+// 	if err != nil {
+// 		return queryHistory, err
+// 	}
+
+// 	/*
+// 			timesteps are automatically determined based on the time range:
+// 		  - Within 24hrs: hour
+// 		  - Within 1 month: day
+// 		  - Within 3 months: week
+// 		  - Within 2 years: month
+// 		  - More than 2 years: year
+// 	*/
+// 	if timeToTime.Sub(timeFromTime).Hours() <= 24 {
+// 		timeStepUnit = "hour" // Within 24hrs
+// 	} else if timeToTime.Sub(timeFromTime).Hours() < 24*32 {
+// 		timeStepUnit = "day" // Within 1 month
+// 	} else if timeToTime.Sub(timeFromTime).Hours() < 24*93 {
+// 		timeStepUnit = "week" // Within 3 months
+// 	} else if timeToTime.Sub(timeFromTime).Hours() < 24*740 {
+// 		timeStepUnit = "month" // Within 2 years
+// 	} else {
+// 		timeStepUnit = "year" // More than 2 years
+// 	}
+
 // 	// Insert the time range and timestep unit into the query
 // 	var queryInsertStrings []any
 
-	
+// 	if strings.Count(historyDataQuery.QueryHistory, "%s")%3 != 0 {
+// 		return queryHistory, fmt.Errorf("invalid query string")
+// 	}
+
+// 	for i := 0; i < strings.Count(historyDataQuery.QueryHistory, "%s")/3; i++ {
+// 		queryInsertStrings = append(queryInsertStrings, timeStepUnit, timeFrom, timeTo)
+// 	}
+
+// 	historyDataQuery.QueryHistory = fmt.Sprintf(historyDataQuery.QueryHistory, queryInsertStrings...)
 
 // 	return historyDataQuery.QueryHistory, nil
 // }
