@@ -42,9 +42,13 @@ type TwoDimensionalDataOutput struct {
 	Data []TwoDimensionalData `json:"data"`
 }
 
+type OneDimensionalData struct {
+	Town string `gorm:"column:town" json:"town"`
+}
+
 type MyData struct {
-	Xaxis string `gorm:"column:place_name" json:"x"`
-	Data string `gorm:"column:town" json:"y"`
+	Xaxis string `gorm:"column:place_name" json:"place_name"`
+	Data string `gorm:"column:town" json:"town"`
 }
 type MyDataOutput struct {
 	Data []MyData `json:"data"`
@@ -351,9 +355,22 @@ func GetMapLegendData(query *string, timeFrom string, timeTo string) (chartData 
 	return chartData, nil
 }
 
+func GetNameData() (roadOutput []OneDimensionalData, err error) {
+    var result []OneDimensionalData
+    
+    db := DBDashboard.Table("Taipei_Road").Select("DISTINCT town")
+    if err := db.Find(&result).Error; err != nil {
+        return nil, err
+    }
+    
+    return result, nil
+}
+
+
+
 func GetRoadData(id int) (roadOutput []MyDataOutput, err error) {
 	var road []MyData
-
+	
 	// 從資料庫中擷取數據
 	switch id {
 		case 0:		// 北投區

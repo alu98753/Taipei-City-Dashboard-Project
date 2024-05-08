@@ -135,6 +135,21 @@ func GetRoadData(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": "success", "data": queryResult})
 }
 
+func GetNameData(c *gin.Context) {
+
+	queryResult, err := models.GetNameData()
+	if err != nil{
+		c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": err.Error()})
+		return
+	}
+	if len(queryResult) == 0 || len(queryResult[0].Town) == 0 {
+		c.JSON(http.StatusNotFound, gin.H{"status": "error", "message": "No Road data available"})
+		return
+	}
+	
+	c.JSON(http.StatusOK, gin.H{"status": "success", "data": queryResult})
+}
+
 // func GetComponentSurveyData(c *gin.Context) {
 // 	// 1. Get the component id from the URL
 // 	id, err := strconv.Atoi(c.Param("id"))
