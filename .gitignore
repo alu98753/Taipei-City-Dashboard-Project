@@ -56,7 +56,7 @@ Taipei-City-Dashboard-FE/.env.test
 
 # docker-compose
 # db data
-# docker/db-data
+docker/db-data
 # nginx ssl
 docker/nginx/ssl
 Taipei-City-Dashboard-FE/public/mapData/*
