@@ -1,7 +1,7 @@
 import requests
 
 # 設置目標URL
-url = "https://opendata.cwa.gov.tw/fileapi/v1/rest/datastore/M-A0085-001?Authorization={CWA-D31EC832-ADFA-465F-A266-30229B00A185}&format={json}"
+url = "https://opendata.cwa.gov.tw/api/v1/rest/datastore/F-D0047-061?Authorization=CWA-64E4685F-C286-42E2-BFF9-290C61EB7465&limit=10&format=json"
 
 
 # 提供API金鑰
