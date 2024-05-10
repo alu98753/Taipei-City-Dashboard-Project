@@ -17,6 +17,8 @@ import { DashboardComponent } from "city-dashboard-component";
 import { useContentStore } from "../store/contentStore";
 import { useDialogStore } from "../store/dialogStore";
 import { useMapStore } from "../store/mapStore";
+import { watch } from "vue";
+import { onMounted } from "vue";
 
 import MapContainer from "../components/map/MapContainer.vue";
 import MoreInfo from "../components/dialogs/MoreInfo.vue";
@@ -35,7 +37,9 @@ const roads = ref([]);
 // Function to fetch towns from the first API
 async function fetchTowns() {
 	try {
-		const response = await axios.get("your_first_api_url");
+		const response = await axios.get(
+			"http://localhost:8088/api/v1/component/road"
+		);
 		towns.value = response.data;
 	} catch (error) {
 		console.error("Error fetching towns:", error);
@@ -47,9 +51,12 @@ async function updateRoads() {
 	if (selectedTown.value) {
 		try {
 			const response = await axios.get(
-				`{url}/{api ver}/component/road/:${selectedTown.value}`
+				`{url}/{api ver}/component/road/${selectedTown.value}`
 			);
-			roads.value = response.data;
+			townsData = response.data.data;
+			townsList = townsData.map((item) => item.town);
+
+			roads.valu = townsList;
 		} catch (error) {
 			console.error("Error fetching roads:", error);
 		}
@@ -72,28 +79,28 @@ function handleOpenSettings() {
 	dialogStore.showDialog("addEditDashboards");
 }
 
-function handleSubmit() {
-	//處理資料送回後端的api
-	const selectedTownValue = selectedTown.value;
-	const selectedRoadValue = selectedRoad.value;
-	const suggestionText = document.querySelector(".input-wrapper input").value;
+// function handleSubmit() {
+// 	//處理資料送回後端的api
+// 	const selectedTownValue = selectedTown.value;
+// 	const selectedRoadValue = selectedRoad.value;
+// 	const suggestionText = document.querySelector(".input-wrapper input").value;
 
-	// 发送数据给后端
-	axios
-		.post("your_backend_api_url", {
-			town: selectedTownValue,
-			road: selectedRoadValue,
-			suggestion: suggestionText,
-		})
-		.then((response) => {
-			console.log("提交成功！", response.data);
-			// 可以在这里执行其他操作，例如显示成功消息等
-		})
-		.catch((error) => {
-			console.error("提交失败！", error);
-			// 可以在这里执行其他操作，例如显示错误消息等
-		});
-}
+// 	// 发送数据给后端
+// 	axios
+// 		.post("your_backend_api_url", {
+// 			town: selectedTownValue,
+// 			road: selectedRoadValue,
+// 			suggestion: suggestionText,
+// 		})
+// 		.then((response) => {
+// 			console.log("提交成功！", response.data);
+// 			// 可以在这里执行其他操作，例如显示成功消息等
+// 		})
+// 		.catch((error) => {
+// 			console.error("提交失败！", error);
+// 			// 可以在这里执行其他操作，例如显示错误消息等
+// 		});
+// }
 </script>
 
 <template>
