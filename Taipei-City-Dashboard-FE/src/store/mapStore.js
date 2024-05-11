@@ -59,13 +59,14 @@ export const useMapStore = defineStore("map", {
 		savedLocations: savedLocations,
 		// Store currently loading layers,
 		loadingLayers: [],
-		locaton: []
 	}),
 	getters: {},
 	actions: {
 		/* Initialize Mapbox */
 		// 1. Creates the mapbox instance and passes in initial configs
 		initializeMapBox() {
+			this.start= [];
+			this.end = [];
 			this.map = null;
 			const MAPBOXTOKEN = import.meta.env.VITE_MAPBOXTOKEN;
 			mapboxGl.accessToken = MAPBOXTOKEN;
@@ -87,29 +88,48 @@ export const useMapStore = defineStore("map", {
 				directions,
 				'top-right'
 			);*/
-			var location = new mapboxGl.GeolocateControl({
+			this.map.addControl(new mapboxGl.GeolocateControl({
 				positionOptions: {
 					enableHighAccuracy: true
 				},
 				showUserLocation: true,
 				trackUserLocation: true
-			});
-			this.map.addControl(location)
-			this.getCurrentLocation()
-  				.then(resolve => {
-    			// 將經緯度資訊存入 const
-				this.location.push(resolve);
-    			// 這裡可以使用經緯度資訊做任何你需要的事情
-    			console.log("經度：" + this.locaton[0].longitude + "，緯度：" + this.locaton[0].latitude);
- 			 	})
-				.catch(error => {
-					console.error(error);
-				}); 	
+			}))	
 			this.map.doubleClickZoom.disable();
-			console.log(start.latitude)
 			this.map
 				.on("load", () => {
 					this.initializeBasicLayers();
+					this.getCurrentLocation()
+  						.then(resolve => {
+    					// 將經緯度資訊存入 const
+    					// 這裡可以使用經緯度資訊做任何你需要的事情
+    					console.log("經度：" + resolve[0] + "，緯度：" + resolve[1]);
+						this.getRoute(resolve, resolve);
+						this.map.addLayer({
+							id: 'point',
+							type: 'circle',
+							source: {
+							type: 'geojson',
+							data: {
+								type: 'FeatureCollection',
+								features: [
+								{
+									type: 'Feature',
+									properties: {},
+									geometry: {
+									type: 'Point',
+									coordinates: resolve
+									}
+								}
+								]
+							}
+							},
+							paint: {
+							'circle-radius': 10,
+							'circle-color': '#be3844'
+							}
+							})
+						})
 				})
 				.on("click", (event) => {
 					if (this.popup) {
@@ -117,39 +137,44 @@ export const useMapStore = defineStore("map", {
 					}
 					this.addPopup(event);
 				})
-				.on('load', () => {
-					// make an initial directions request that
-					// starts and ends at the same location
-					//console.log("start" + start[0] + "end" + start[1])
-					this.getRoute(start, start);
-					this.map.addLayer({
-						id: 'point',
-						type: 'circle',
-						source: {
-						  type: 'geojson',
-						  data: {
-							type: 'FeatureCollection',
-							features: [
-							  {
-								type: 'Feature',
-								properties: {},
-								geometry: {
-								  type: 'Point',
-								  coordinates: start
-								}
-							  }
-							]
-						  }
-						},
-						paint: {
-						  'circle-radius': 10,
-						  'circle-color': '#3887be'
-						}
-					  });
-					  console.log("end1"+end[0]+"end2"+end[1])
-					})
+			
 				.on('click', (event) => {
-					const coords = Object.keys(event.lngLat).map((key) => event.lngLat[key]);
+					this.getCurrentLocation()
+  						.then(resolve => {
+    					// 將經緯度資訊存入 const
+    					// 這裡可以使用經緯度資訊做任何你需要的事情
+    					console.log("經度：" + resolve[0] + "，緯度：" + resolve[1]);
+						if (this.map.getLayer('point')) {
+							this.map.removeLayer('point');
+						}
+						if (this.map.getSource('point')) {
+							this.map.removeSource('point');
+						  }
+						this.map.addLayer({
+							id: 'point',
+							type: 'circle',
+							source: {
+							type: 'geojson',
+							data: {
+								type: 'FeatureCollection',
+								features: [
+								{
+									type: 'Feature',
+									properties: {},
+									geometry: {
+									type: 'Point',
+									coordinates: resolve
+									}
+								}
+								]
+							}
+							},
+							paint: {
+							'circle-radius': 10,
+							'circle-color': '#be3844'
+							}
+							})
+							const coords = Object.keys(event.lngLat).map((key) => event.lngLat[key]);
 					const end = {
 					  type: 'FeatureCollection',
 					  features: [
@@ -191,13 +216,15 @@ export const useMapStore = defineStore("map", {
 						}
 					  });
 					}
-					getRoute(start, coords);
-				  })
+					this.getRoute(resolve, coords);
+					})
+				})
 				.on("idle", () => {
 					this.loadingLayers = this.loadingLayers.filter(
 						(el) => el !== "rendering"
 					);
 				});
+
 		},
 		// 2. Adds three basic layers to the map (Taipei District, Taipei Village labels, and Taipei 3D Buildings)
 		// Due to performance concerns, Taipei 3D Buildings won't be added in the mobile version
@@ -964,20 +991,33 @@ export const useMapStore = defineStore("map", {
 			this.removePopup();
 		},
 		// create a function to make a directions request
-		getRoute(start, end) {
+		async getRoute(start, end) {
   			// make a directions request using cycling profile
   			// an arbitrary start will always be the same
   			// only the end or destination will change
-			console.log(start.latitude)
-			console.log(end.longitude)
-  			const query = fetch(
-    		`https://api.mapbox.com/directions/v5/mapbox/cycling/${start.longitude},${start.latitude};${end.longitude},${end.latitude}?steps=true&geometries=geojson&access_token=${mapboxGl.accessToken}`,
+			console.log(start[0])
+			console.log(end[1])
+			console.log(`https://api.mapbox.com/directions/v5/mapbox/walking/${start[0]},${start[1]};${end[0]},${end[1]}?steps=true&geometries=geojson&access_token=${mapboxGl.accessToken}`);
+  			const query = await fetch(
+    		`https://api.mapbox.com/directions/v5/mapbox/walking/${start[0]},${start[1]};${end[0]},${end[1]}?steps=true&geometries=geojson&access_token=${mapboxGl.accessToken}`,
     		{ method: 'GET' }
-  			);
+  			);//.then((response) => response.json())
+			//.then(data => {
+				//console.log(data);
+				//if(data.routes){
+				//	return data.routes[0];
+				//} else {
+					//console.log("fail to read data.");s
+					//return [];
+				//}
+			//})
+			//.then(route => { return route.geometry.coordinates});
+			//.then(route => route.geometry.coordinates);
 				console.log("HTTP GET");
-			  const json = query.json();
+			  const json = await query.json();
 			  const data = json.routes[0];
 			  const route = data.geometry.coordinates;
+			  console.log(route)
 			  const geojson = {
 				type: 'Feature',
 				properties: {},
@@ -986,10 +1026,13 @@ export const useMapStore = defineStore("map", {
 				  coordinates: route
 				}
 			  };
+			  console.log(geojson);
 			  if (this.map.getSource('route')) {
+				console.log("already have rout");
 				this.map.getSource('route').setData(geojson);
 			  }
 			  else {
+				console.log("add route layer");
 				this.map.addLayer({
 				  id: 'route',
 				  type: 'line',
@@ -1013,6 +1056,7 @@ export const useMapStore = defineStore("map", {
 		getCurrentLocation() {
 			return new Promise((resolve, reject) => {
 			  // 檢查瀏覽器是否支持 Geolocation API
+			  let arr = [];
 			  if (navigator.geolocation) {
 				// 如果支持，調用 getCurrentPosition 方法來獲取位置資訊
 				navigator.geolocation.getCurrentPosition(
@@ -1021,9 +1065,10 @@ export const useMapStore = defineStore("map", {
 					const latitude = position.coords.latitude; // 緯度
 					const longitude = position.coords.longitude; // 經度
 					console.log("經度：" + longitude + "，緯度：" + latitude);
-		  
+					
+					arr.push(longitude, latitude);
 					// 將經緯度資訊以物件形式回傳
-					resolve({ longitude, latitude });
+					resolve(arr);
 				  },
 				  // 失敗時的回調函數
 				  function(error) {
