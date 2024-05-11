@@ -72,7 +72,7 @@ func configureComponentRoutes() {
 		// get roads' name, API is /component/road/:id
 		componentRoutes.GET("/road/:id", controllers.GetRoadData)
 		// automatic updates, API is /component/update/:id
-		componentRoutes.POST("/update/:id", controllers.UpdateData)
+		// componentRoutes.POST("/update/:id", controllers.UpdateData)
 	}
 	componentRoutes.Use(middleware.IsSysAdm())
 	{

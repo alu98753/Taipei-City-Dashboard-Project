@@ -56,15 +56,15 @@ type MyDataOutput struct {
 
 
 type UpdateDataRequest struct {
-	TownName	string	`json:"TownName"`
-	StationName   string    `json:"StationName"`
-	StationLongitude   float32    `json:"StationLongitude"`
-	StationLatitude   float32    `json:"StationLatitude"`
-	Past10Min   float32    `json:"Past10Min"`
-	Past1hr   float32    `json:"Past1hr"`
-	Past3hr   float32    `json:"Past3hr"`
-	Past24hr   float32    `json:"Past24hr"`
-	DateTime   string    `json:"DateTime"`
+	townname	string	`json: "town_name"`
+	stationname   string    `json: "station_name"`
+	stationlongitude   float32    `json: "station_longitude"`
+	stationlatitude   float32    `json: "station_latitude"`
+	past10min   float32    `json: "past_10_min"`
+	past1hr   float32    `json: "past_1_hr"`
+	past3hr   float32    `json: "past_3_hr"`
+	past24hr   float32    `json: "past_24_hr"`
+	datetime   string    `json: "date_time"`
 }
 
 /*
@@ -451,26 +451,28 @@ func GetRoadData(id int) (roadOutput []MyDataOutput, err error) {
 	return roadOutput, nil
 }
 
-func UpdateRainfalldata(input UpdateDataRequest) error {
-	var existingRecord UpdateDataRequest
-    if err := DBDashboard.Table("taipei_rainfall").Where("StationName = ?", input.StationName).FirstOrCreate(&existingRecord, input).Error; err != nil {
-        return err
-    }
+// 半成品
+// func UpdateRainfalldata(input UpdateDataRequest) error {
+	
+// 	var existingRecord UpdateDataRequest
+//     if err := DBDashboard.Table("taipei_rainfall").Where("station_name = ?", input.stationname).FirstOrCreate(&existingRecord, input).Error; err != nil {
+//         return err
+//     }
 
-    if existingRecord.StationName != "" {
-		existingRecord.TownName = input.TownName
-		existingRecord.StationLatitude = input.StationLatitude
-		existingRecord.StationLongitude = input.StationLongitude
-		existingRecord.Past10Min = input.Past10Min
-		existingRecord.Past1hr = input.Past1hr
-		existingRecord.Past3hr = input.Past3hr
-		existingRecord.Past24hr = input.Past24hr
-		existingRecord.DateTime = input.DateTime
+//     if existingRecord.stationname != "" {
+// 		existingRecord.townname = input.townname
+// 		existingRecord.stationlatitude = input.stationlatitude
+// 		existingRecord.stationlongitude = input.stationlongitude
+// 		existingRecord.past10min = input.past10min
+// 		existingRecord.past1hr = input.past1hr
+// 		existingRecord.past3hr = input.past3hr
+// 		existingRecord.past24hr = input.past24hr
+// 		existingRecord.datetime = input.datetime
 
-        if err := DBDashboard.Save(&existingRecord).Error; err != nil {
-            return err
-        }
-    }
+//         if err := DBDashboard.Save(&existingRecord).Error; err != nil {
+//             return err
+//         }
+//     }
 
-    return nil
-}
+//     return nil
+// }
