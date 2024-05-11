@@ -10,6 +10,10 @@ https://docs.mapbox.com/mapbox-gl-js/guides/
 import { createApp, defineComponent, nextTick, ref } from "vue";
 import { defineStore } from "pinia";
 import mapboxGl from "mapbox-gl";
+//import MapboxDirections from "@mapbox/mapbox-gl-directions/src/directions.js";
+//import "@mapbox/mapbox-gl-directions/src/mapbox-gl-directions.css";
+//import MapboxGeocoder from '@mapbox/mapbox-gl-geocoder';
+//import '@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css';
 import "mapbox-gl/dist/mapbox-gl.css";
 import axios from "axios";
 import { Threebox } from "threebox-plugin";
@@ -55,6 +59,7 @@ export const useMapStore = defineStore("map", {
 		savedLocations: savedLocations,
 		// Store currently loading layers,
 		loadingLayers: [],
+		locaton: []
 	}),
 	getters: {},
 	actions: {
@@ -69,7 +74,39 @@ export const useMapStore = defineStore("map", {
 				style: mapStyle,
 			});
 			this.map.addControl(new mapboxGl.NavigationControl());
+			//this.map.addControl(new mapboxGl.FullscreenControl());
+			/*const geocoder = new MapboxGeocoder({
+				accessToken: mapboxGl.accessToken,
+				mapboxgl: mapboxGl
+			});
+			this.map.addControl(geocoder);
+			/*var directions = new MapboxDirections({
+				accessToken: MAPBOXTOKEN
+			});
+			this.map.addControl(
+				directions,
+				'top-right'
+			);*/
+			var location = new mapboxGl.GeolocateControl({
+				positionOptions: {
+					enableHighAccuracy: true
+				},
+				showUserLocation: true,
+				trackUserLocation: true
+			});
+			this.map.addControl(location)
+			this.getCurrentLocation()
+  				.then(resolve => {
+    			// 將經緯度資訊存入 const
+				this.location.push(resolve);
+    			// 這裡可以使用經緯度資訊做任何你需要的事情
+    			console.log("經度：" + this.locaton[0].longitude + "，緯度：" + this.locaton[0].latitude);
+ 			 	})
+				.catch(error => {
+					console.error(error);
+				}); 	
 			this.map.doubleClickZoom.disable();
+			console.log(start.latitude)
 			this.map
 				.on("load", () => {
 					this.initializeBasicLayers();
@@ -80,6 +117,82 @@ export const useMapStore = defineStore("map", {
 					}
 					this.addPopup(event);
 				})
+				.on('load', () => {
+					// make an initial directions request that
+					// starts and ends at the same location
+					//console.log("start" + start[0] + "end" + start[1])
+					this.getRoute(start, start);
+					this.map.addLayer({
+						id: 'point',
+						type: 'circle',
+						source: {
+						  type: 'geojson',
+						  data: {
+							type: 'FeatureCollection',
+							features: [
+							  {
+								type: 'Feature',
+								properties: {},
+								geometry: {
+								  type: 'Point',
+								  coordinates: start
+								}
+							  }
+							]
+						  }
+						},
+						paint: {
+						  'circle-radius': 10,
+						  'circle-color': '#3887be'
+						}
+					  });
+					  console.log("end1"+end[0]+"end2"+end[1])
+					})
+				.on('click', (event) => {
+					const coords = Object.keys(event.lngLat).map((key) => event.lngLat[key]);
+					const end = {
+					  type: 'FeatureCollection',
+					  features: [
+						{
+						  type: 'Feature',
+						  properties: {},
+						  geometry: {
+							type: 'Point',
+							coordinates: coords
+						  }
+						}
+					  ]
+					};
+					if (this.map.getLayer('end')) {
+					  this.map.getSource('end').setData(end);
+					} else {
+					  this.map.addLayer({
+						id: 'end',
+						type: 'circle',
+						source: {
+						  type: 'geojson',
+						  data: {
+							type: 'FeatureCollection',
+							features: [
+							  {
+								type: 'Feature',
+								properties: {},
+								geometry: {
+								  type: 'Point',
+								  coordinates: coords
+								}
+							  }
+							]
+						  }
+						},
+						paint: {
+						  'circle-radius': 5,
+						  'circle-color': '#f30'
+						}
+					  });
+					}
+					getRoute(start, coords);
+				  })
 				.on("idle", () => {
 					this.loadingLayers = this.loadingLayers.filter(
 						(el) => el !== "rendering"
@@ -850,5 +963,77 @@ export const useMapStore = defineStore("map", {
 			this.currentVisibleLayers = [];
 			this.removePopup();
 		},
+		// create a function to make a directions request
+		getRoute(start, end) {
+  			// make a directions request using cycling profile
+  			// an arbitrary start will always be the same
+  			// only the end or destination will change
+			console.log(start.latitude)
+			console.log(end.longitude)
+  			const query = fetch(
+    		`https://api.mapbox.com/directions/v5/mapbox/cycling/${start.longitude},${start.latitude};${end.longitude},${end.latitude}?steps=true&geometries=geojson&access_token=${mapboxGl.accessToken}`,
+    		{ method: 'GET' }
+  			);
+				console.log("HTTP GET");
+			  const json = query.json();
+			  const data = json.routes[0];
+			  const route = data.geometry.coordinates;
+			  const geojson = {
+				type: 'Feature',
+				properties: {},
+				geometry: {
+				  type: 'LineString',
+				  coordinates: route
+				}
+			  };
+			  if (this.map.getSource('route')) {
+				this.map.getSource('route').setData(geojson);
+			  }
+			  else {
+				this.map.addLayer({
+				  id: 'route',
+				  type: 'line',
+				  source: {
+					type: 'geojson',
+					data: geojson
+				  },
+				  layout: {
+					'line-join': 'round',
+					'line-cap': 'round'
+				  },
+				  paint: {
+					'line-color': '#3887be',
+					'line-width': 5,
+					'line-opacity': 0.75
+				  }
+				});
+			  }
+			  // add turn instructions here at the end
+		},	
+		getCurrentLocation() {
+			return new Promise((resolve, reject) => {
+			  // 檢查瀏覽器是否支持 Geolocation API
+			  if (navigator.geolocation) {
+				// 如果支持，調用 getCurrentPosition 方法來獲取位置資訊
+				navigator.geolocation.getCurrentPosition(
+				  // 成功時的回調函數，position 包含經緯度等位置資訊
+				  function(position) {
+					const latitude = position.coords.latitude; // 緯度
+					const longitude = position.coords.longitude; // 經度
+					console.log("經度：" + longitude + "，緯度：" + latitude);
+		  
+					// 將經緯度資訊以物件形式回傳
+					resolve({ longitude, latitude });
+				  },
+				  // 失敗時的回調函數
+				  function(error) {
+					reject("無法獲取位置：" + error.message);
+				  }
+				);
+			  } else {
+				reject("瀏覽器不支持地理位置服務");
+			  }
+			});
+		  }
 	},
 });
