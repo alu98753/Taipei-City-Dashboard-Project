@@ -374,7 +374,7 @@ func GetRoadData(id int) (roadOutput []MyDataOutput, err error) {
 	// 從資料庫中擷取數據
 	switch id {
 		case 0:		// 北投區
-			err := DBDashboard.Table("Taipei_Road").Select("place_name","town").Where("town = ?", "信義區").Find(&road).Error
+			err := DBDashboard.Table("Taipei_Road").Select("place_name","town").Where("town = ?", "北投區").Find(&road).Error
 			if err != nil {
 				return nil, err
 			}

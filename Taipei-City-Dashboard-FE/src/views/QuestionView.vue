@@ -12,13 +12,10 @@ Testing: Jack Huang (Data Scientist), Ian Huang (Data Analysis Intern)
 
 <script setup>
 import axios from "axios";
-import { ref } from "vue";
-import { DashboardComponent } from "city-dashboard-component";
+import { ref, watch, onMounted } from "vue";
 import { useContentStore } from "../store/contentStore";
 import { useDialogStore } from "../store/dialogStore";
 import { useMapStore } from "../store/mapStore";
-import { watch } from "vue";
-import { onMounted } from "vue";
 
 import MapContainer from "../components/map/MapContainer.vue";
 import MoreInfo from "../components/dialogs/MoreInfo.vue";
@@ -26,7 +23,7 @@ import ReportIssue from "../components/dialogs/ReportIssue.vue";
 
 const contentStore = useContentStore();
 const dialogStore = useDialogStore();
-const mapStore = useMapStore();
+// const mapStore = useMapStore();
 
 // Data for dropdowns
 const selectedTown = ref("");
@@ -40,23 +37,25 @@ async function fetchTowns() {
 		const response = await axios.get(
 			"http://localhost:8088/api/v1/component/road"
 		);
-		towns.value = response.data;
+		const townsData = response.data.data.map((item) => item.town);
+		towns.value = townsData;
 	} catch (error) {
 		console.error("Error fetching towns:", error);
 	}
 }
 
-// Function to fetch roads based on selected town
-async function updateRoads() {
-	if (selectedTown.value) {
+async function updateRoads(selectedTownIndex) {
+	console.log(selectedTownIndex);
+	if (selectedTownIndex !== null && selectedTownIndex !== undefined) {
+		const selectedTownId = selectedTownIndex; // 假設 id 就是索引本身
 		try {
 			const response = await axios.get(
-				`{url}/{api ver}/component/road/${selectedTown.value}`
+				"http://localhost:8088/api/v1/component/road/${selectedTownId}"
 			);
-			townsData = response.data.data;
-			townsList = townsData.map((item) => item.town);
-
-			roads.valu = townsList;
+			const placeNames = response.data.data[0].data.map(
+				(item) => item.place_name
+			);
+			roads.value = placeNames;
 		} catch (error) {
 			console.error("Error fetching roads:", error);
 		}
@@ -64,9 +63,6 @@ async function updateRoads() {
 		roads.value = [];
 	}
 }
-
-// 如果selectedTown有選擇就執行updataRoads
-watch(selectedTown, updateRoads);
 
 // 渲染時就呼叫第一次api
 onMounted(fetchTowns);
@@ -79,36 +75,39 @@ function handleOpenSettings() {
 	dialogStore.showDialog("addEditDashboards");
 }
 
-// function handleSubmit() {
-// 	//處理資料送回後端的api
-// 	const selectedTownValue = selectedTown.value;
-// 	const selectedRoadValue = selectedRoad.value;
-// 	const suggestionText = document.querySelector(".input-wrapper input").value;
+function handleSubmit() {
+	//處理資料送回後端的api
+	const selectedTownValue = selectedTown.value;
+	const selectedRoadValue = selectedRoad.value;
+	const suggestionText = document.querySelector(".input-wrapper input").value;
 
-// 	// 发送数据给后端
-// 	axios
-// 		.post("your_backend_api_url", {
-// 			town: selectedTownValue,
-// 			road: selectedRoadValue,
-// 			suggestion: suggestionText,
-// 		})
-// 		.then((response) => {
-// 			console.log("提交成功！", response.data);
-// 			// 可以在这里执行其他操作，例如显示成功消息等
-// 		})
-// 		.catch((error) => {
-// 			console.error("提交失败！", error);
-// 			// 可以在这里执行其他操作，例如显示错误消息等
-// 		});
-// }
+	// 发送数据给后端
+	axios
+		.post("your_backend_api_url", {
+			town: selectedTownValue,
+			road: selectedRoadValue,
+			suggestion: suggestionText,
+		})
+		.then((response) => {
+			console.log("提交成功！", response.data);
+			// 可以在这里执行其他操作，例如显示成功消息等
+		})
+		.catch((error) => {
+			console.error("提交失败！", error);
+			// 可以在这里执行其他操作，例如显示错误消息等
+		});
+}
 </script>
 
 <template>
 	<div class="questionboard">
 		<div class="question-select">
 			<h2>請選擇地區</h2>
-			<select v-model="selectedTown" @change="updateRoads">
-				<option value="">請選擇</option>
+			<select
+				v-model="selectedTown"
+				@change="updateRoads($event.target.selectedIndex)"
+			>
+				<option v-if="!selectedTown" disabled value="">請選擇</option>
 				<option v-for="town in towns" :value="town">{{ town }}</option>
 			</select>
 			<select v-model="selectedRoad">
