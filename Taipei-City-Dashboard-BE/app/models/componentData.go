@@ -55,6 +55,18 @@ type MyDataOutput struct {
 }
 
 
+type UpdateDataRequest struct {
+	TownName	string	`json:"TownName"`
+	StationName   string    `json:"StationName"`
+	StationLongitude   float32    `json:"StationLongitude"`
+	StationLatitude   float32    `json:"StationLatitude"`
+	Past10Min   float32    `json:"Past10Min"`
+	Past1hr   float32    `json:"Past1hr"`
+	Past3hr   float32    `json:"Past3hr"`
+	Past24hr   float32    `json:"Past24hr"`
+	DateTime   string    `json:"DateTime"`
+}
+
 /*
 ThreeDimensionalData & PercentData Json Format:
 
@@ -439,66 +451,26 @@ func GetRoadData(id int) (roadOutput []MyDataOutput, err error) {
 	return roadOutput, nil
 }
 
+func UpdateRainfalldata(input UpdateDataRequest) error {
+	var existingRecord UpdateDataRequest
+    if err := DBDashboard.Table("taipei_rainfall").Where("StationName = ?", input.StationName).FirstOrCreate(&existingRecord, input).Error; err != nil {
+        return err
+    }
 
-// func GetComponentSurveyDataQuery(id int, timeFrom string, timeTo string) (queryHistory string, err error) {
-// 	// Under construction
-// 	var historyDataQuery HistoryDataQuery
+    if existingRecord.StationName != "" {
+		existingRecord.TownName = input.TownName
+		existingRecord.StationLatitude = input.StationLatitude
+		existingRecord.StationLongitude = input.StationLongitude
+		existingRecord.Past10Min = input.Past10Min
+		existingRecord.Past1hr = input.Past1hr
+		existingRecord.Past3hr = input.Past3hr
+		existingRecord.Past24hr = input.Past24hr
+		existingRecord.DateTime = input.DateTime
 
-// 	err = DBManager.
-// 		Table("components").
-// 		Select("query_history").
-// 		Where("components.id = ?", id).
-// 		Find(&historyDataQuery).Error
-// 	if err != nil {
-// 		return queryHistory, err
-// 	}
-// 	if historyDataQuery.QueryHistory == "" {
-// 		return historyDataQuery.QueryHistory, err
-// 	}
+        if err := DBDashboard.Save(&existingRecord).Error; err != nil {
+            return err
+        }
+    }
 
-// 	var timeStepUnit string
-
-// 	timeFromTime, err := time.Parse("2006-01-02T15:04:05+08:00", timeFrom)
-// 	if err != nil {
-// 		return queryHistory, err
-// 	}
-// 	timeToTime, err := time.Parse("2006-01-02T15:04:05+08:00", timeTo)
-// 	if err != nil {
-// 		return queryHistory, err
-// 	}
-
-// 	/*
-// 			timesteps are automatically determined based on the time range:
-// 		  - Within 24hrs: hour
-// 		  - Within 1 month: day
-// 		  - Within 3 months: week
-// 		  - Within 2 years: month
-// 		  - More than 2 years: year
-// 	*/
-// 	if timeToTime.Sub(timeFromTime).Hours() <= 24 {
-// 		timeStepUnit = "hour" // Within 24hrs
-// 	} else if timeToTime.Sub(timeFromTime).Hours() < 24*32 {
-// 		timeStepUnit = "day" // Within 1 month
-// 	} else if timeToTime.Sub(timeFromTime).Hours() < 24*93 {
-// 		timeStepUnit = "week" // Within 3 months
-// 	} else if timeToTime.Sub(timeFromTime).Hours() < 24*740 {
-// 		timeStepUnit = "month" // Within 2 years
-// 	} else {
-// 		timeStepUnit = "year" // More than 2 years
-// 	}
-
-// 	// Insert the time range and timestep unit into the query
-// 	var queryInsertStrings []any
-
-// 	if strings.Count(historyDataQuery.QueryHistory, "%s")%3 != 0 {
-// 		return queryHistory, fmt.Errorf("invalid query string")
-// 	}
-
-// 	for i := 0; i < strings.Count(historyDataQuery.QueryHistory, "%s")/3; i++ {
-// 		queryInsertStrings = append(queryInsertStrings, timeStepUnit, timeFrom, timeTo)
-// 	}
-
-// 	historyDataQuery.QueryHistory = fmt.Sprintf(historyDataQuery.QueryHistory, queryInsertStrings...)
-
-// 	return historyDataQuery.QueryHistory, nil
-// }
+    return nil
+}

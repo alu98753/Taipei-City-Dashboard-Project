@@ -71,14 +71,9 @@ func configureComponentRoutes() {
 		componentRoutes.GET("/road", controllers.GetNameData)
 		// get roads' name, API is /component/road/:id
 		componentRoutes.GET("/road/:id", controllers.GetRoadData)
-		// // get survey data, API is /component/:id/survey
-		// componentRoutes.GET("/:id/survey", controllers.GetComponentSurveyData)
+		// automatic updates, API is /component/update/:id
+		componentRoutes.POST("/update/:id", controllers.UpdateData)
 	}
-	// componentRoutes.Use(middleware.IsLoggedIn())
-	// {
-	// 	// Submitting opinion survey needs login
-	// 	componentRoutes.PATCH("/", controllers.)
-	// }
 	componentRoutes.Use(middleware.IsSysAdm())
 	{
 		componentRoutes.

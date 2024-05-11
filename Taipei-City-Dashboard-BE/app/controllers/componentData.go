@@ -150,33 +150,31 @@ func GetNameData(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": "success", "data": queryResult})
 }
 
-// func GetComponentSurveyData(c *gin.Context) {
-// 	// 1. Get the component id from the URL
-// 	id, err := strconv.Atoi(c.Param("id"))
-// 	if err != nil {
-// 		c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "Invalid component ID"})
-// 		return
-// 	}
+func UpdateData(c *gin.Context) {
 
-// 	timeFrom, timeTo := util.GetTime(c)
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "Invalid component ID"})
+		return
+	}
+	var req models.UpdateDataRequest
 
-// 	// 2. Get the history data query from the database
-// 	queryHistory, err := models.GetComponentSurveyDataQuery(id, timeFrom, timeTo)
-// 	if err != nil {
-// 		c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": err.Error()})
-// 		return
-// 	}
-// 	if queryHistory == "" {
-// 		c.JSON(http.StatusNotFound, gin.H{"status": "error", "message": "No history data available"})
-// 		return
-// 	}
+	switch id {
+		case 0:
+			if err := c.BindJSON(&req); err != nil {
+				c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "Invalid JSON"})
+				return
+			}
 
-// 	// 3. Get and parse the history data
-// 	chartData, err := models.GetTimeSeriesData(&queryHistory, timeFrom, timeTo)
-// 	if err != nil {
-// 		c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": err.Error()})
-// 		return
-// 	}
-// 	c.JSON(http.StatusOK, gin.H{"status": "success", "data": chartData})
-// }
-
+			err := models.UpdateRainfalldata(req)
+			if err != nil{
+				c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": err.Error()})
+				return
+			}
+			
+		default:
+			c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "Invalid component ID"})
+			return
+	}
+	c.JSON(http.StatusOK, gin.H{"status": "success"})
+}
