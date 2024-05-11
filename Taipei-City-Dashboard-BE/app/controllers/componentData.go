@@ -165,9 +165,8 @@ func UpdateData(c *gin.Context) {
 				c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "Invalid JSON"})
 				return
 			}
-
-			err := models.UpdateRainfalldata(req)
-			if err != nil{
+			
+			if err := models.UpdateRainfalldata(req); err != nil{
 				c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": err.Error()})
 				return
 			}
