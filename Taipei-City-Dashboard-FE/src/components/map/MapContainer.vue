@@ -14,6 +14,7 @@ const contentStore = useContentStore();
 
 const districtLayer = ref(false);
 const villageLayer = ref(false);
+const autoLocateMode = ref(true);
 
 // const newSavedLocation = ref("");
 
@@ -21,9 +22,13 @@ const villageLayer = ref(false);
 // 	mapStore.addNewSavedLocation(newSavedLocation.value);
 // 	newSavedLocation.value = "";
 // }
+function toggleAutoLocateMode() {
+	autoLocateMode.value = false;
+	mapStore.toggleAutoMode(autoLocateMode.value);
+}
 
 function toggleDistrictLayer() {
-	districtLayer.value = !districtLayer.value;
+	districtLayer.value = false;
 	mapStore.toggleDistrictBoundaries(districtLayer.value);
 }
 
@@ -70,12 +75,23 @@ onMounted(() => {
 					里
 				</button>
 				<button
+					:style="{
+						color: villageLayer
+							? 'var(--color-highlight)'
+							: 'var(--color-component-background)',
+					}"
+					@click="toggleAutoLocateMode"
+				>
+					切
+				</button>
+				<button
 					class="show-if-mobile"
 					@click="dialogStore.showDialog('mobileLayers')"
 				>
 					<span>layers</span>
 				</button>
 			</div>
+			<div id="instructions"></div>
 			<!-- The key prop informs vue that the component should be updated when switching dashboards -->
 			<MobileLayers :key="contentStore.currentDashboard.index" />
 		</div>
@@ -268,6 +284,18 @@ onMounted(() => {
 	width: 100%;
 	height: 100%;
 	border-radius: 5px;
+}
+
+#instructions {
+	position: absolute;
+	margin: 20px;
+	width: 20%;
+	top: 0;
+	bottom: 75%;
+	padding: 20px;
+	background-color: #000;
+	overflow-y: scroll;
+	font-family: sans-serif;
 }
 
 @keyframes colorfade {

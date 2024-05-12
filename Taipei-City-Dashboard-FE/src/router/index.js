@@ -17,6 +17,7 @@ import MapView from "../views/MapView.vue";
 import ComponentView from "../views/ComponentView.vue";
 import ComponentInfoView from "../views/ComponentInfoView.vue";
 import EmbedView from "../views/EmbedView.vue";
+import QuestionView from "../views/QuestionView.vue";
 
 const routes = [
 	{
@@ -52,6 +53,11 @@ const routes = [
 		path: "/embed/:id",
 		name: "embed",
 		component: EmbedView,
+	},
+	{
+		path: "/questionview",
+		name: "questionview",
+		component: QuestionView,
 	},
 	{
 		path: "/embed",

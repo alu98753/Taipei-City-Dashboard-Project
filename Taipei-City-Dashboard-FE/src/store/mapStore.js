@@ -10,6 +10,10 @@ https://docs.mapbox.com/mapbox-gl-js/guides/
 import { createApp, defineComponent, nextTick, ref } from "vue";
 import { defineStore } from "pinia";
 import mapboxGl from "mapbox-gl";
+//import MapboxDirections from "@mapbox/mapbox-gl-directions/src/directions.js";
+//import "@mapbox/mapbox-gl-directions/src/mapbox-gl-directions.css";
+//import MapboxGeocoder from '@mapbox/mapbox-gl-geocoder';
+//import '@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css';
 import "mapbox-gl/dist/mapbox-gl.css";
 import axios from "axios";
 import { Threebox } from "threebox-plugin";
@@ -69,17 +73,158 @@ export const useMapStore = defineStore("map", {
 				style: mapStyle,
 			});
 			this.map.addControl(new mapboxGl.NavigationControl());
+			//this.map.addControl(new mapboxGl.FullscreenControl());
+			/*const geocoder = new MapboxGeocoder({
+				accessToken: mapboxGl.accessToken,
+				mapboxgl: mapboxGl
+			});
+			this.map.addControl(geocoder);
+			/*var directions = new MapboxDirections({
+				accessToken: MAPBOXTOKEN
+			});
+			this.map.addControl(
+				directions,
+				'top-right'
+			);*/
+			this.map.addControl(
+				new mapboxGl.GeolocateControl({
+					positionOptions: {
+						enableHighAccuracy: true,
+					},
+					showUserLocation: true,
+					trackUserLocation: true,
+				})
+			);
 			this.map.doubleClickZoom.disable();
 			this.map
 				.on("load", () => {
 					this.initializeBasicLayers();
+					this.toggleAutoMode(true);
 				})
+				// 	this.getCurrentLocation().then((resolve) => {
+				// 		// 將經緯度資訊存入 const
+				// 		// 這裡可以使用經緯度資訊做任何你需要的事情
+				// 		console.log(
+				// 			"經度：" + resolve[0] + "，緯度：" + resolve[1]
+				// 		);
+				// 		this.getRoute(resolve, resolve);
+				// 		this.map.addLayer({
+				// 			id: "point",
+				// 			type: "circle",
+				// 			source: {
+				// 				type: "geojson",
+				// 				data: {
+				// 					type: "FeatureCollection",
+				// 					features: [
+				// 						{
+				// 							type: "Feature",
+				// 							properties: {},
+				// 							geometry: {
+				// 								type: "Point",
+				// 								coordinates: resolve,
+				// 							},
+				// 						},
+				// 					],
+				// 				},
+				// 			},
+				// 			paint: {
+				// 				"circle-radius": 10,
+				// 				"circle-color": "#be3844",
+				// 			},
+				// 		});
+				// 	});
+				// })
 				.on("click", (event) => {
 					if (this.popup) {
 						this.popup = null;
 					}
 					this.addPopup(event);
 				})
+
+				// .on("click", (event) => {
+				// 	this.getCurrentLocation().then((resolve) => {
+				// 		// 將經緯度資訊存入 const
+				// 		// 這裡可以使用經緯度資訊做任何你需要的事情
+				// 		console.log(
+				// 			"經度：" + resolve[0] + "，緯度：" + resolve[1]
+				// 		);
+				// 		if (this.map.getLayer("point")) {
+				// 			this.map.removeLayer("point");
+				// 		}
+				// 		if (this.map.getSource("point")) {
+				// 			this.map.removeSource("point");
+				// 		}
+				// 		this.map.addLayer({
+				// 			id: "point",
+				// 			type: "circle",
+				// 			source: {
+				// 				type: "geojson",
+				// 				data: {
+				// 					type: "FeatureCollection",
+				// 					features: [
+				// 						{
+				// 							type: "Feature",
+				// 							properties: {},
+				// 							geometry: {
+				// 								type: "Point",
+				// 								coordinates: resolve,
+				// 							},
+				// 						},
+				// 					],
+				// 				},
+				// 			},
+				// 			paint: {
+				// 				"circle-radius": 10,
+				// 				"circle-color": "#be3844",
+				// 			},
+				// 		});
+				// 		const coords = Object.keys(event.lngLat).map(
+				// 			(key) => event.lngLat[key]
+				// 		);
+				// 		const end = {
+				// 			type: "FeatureCollection",
+				// 			features: [
+				// 				{
+				// 					type: "Feature",
+				// 					properties: {},
+				// 					geometry: {
+				// 						type: "Point",
+				// 						coordinates: coords,
+				// 					},
+				// 				},
+				// 			],
+				// 		};
+				// 		if (this.map.getLayer("end")) {
+				// 			this.map.getSource("end").setData(end);
+				// 		} else {
+				// 			this.map.addLayer({
+				// 				id: "end",
+				// 				type: "circle",
+				// 				source: {
+				// 					type: "geojson",
+				// 					data: {
+				// 						type: "FeatureCollection",
+				// 						features: [
+				// 							{
+				// 								type: "Feature",
+				// 								properties: {},
+				// 								geometry: {
+				// 									type: "Point",
+				// 									coordinates: coords,
+				// 								},
+				// 							},
+				// 						],
+				// 					},
+				// 				},
+				// 				paint: {
+				// 					"circle-radius": 5,
+				// 					"circle-color": "#f30",
+				// 				},
+				// 			});
+				// 		}
+				// 		this.getRoute(resolve, coords);
+				// 	});
+				// })
 				.on("idle", () => {
 					this.loadingLayers = this.loadingLayers.filter(
 						(el) => el !== "rendering"
@@ -849,6 +994,360 @@ export const useMapStore = defineStore("map", {
 			this.map = null;
 			this.currentVisibleLayers = [];
 			this.removePopup();
+		},
+		// create a function to make a directions request
+		async getRoute(start, end) {
+			// make a directions request using cycling profile
+			// an arbitrary start will always be the same
+			// only the end or destination will change
+			console.log(start[0]);
+			console.log(end[1]);
+			console.log(
+				`https://api.mapbox.com/directions/v5/mapbox/driving/${start[0]},${start[1]};${end[0]},${end[1]}?steps=true&geometries=geojson&access_token=${mapboxGl.accessToken}`
+			);
+			const query = await fetch(
+				`https://api.mapbox.com/directions/v5/mapbox/driving/${start[0]},${start[1]};${end[0]},${end[1]}?steps=true&geometries=geojson&access_token=${mapboxGl.accessToken}`,
+				{ method: "GET" }
+			); //.then((response) => response.json())
+			//.then(data => {
+			//console.log(data);
+			//if(data.routes){
+			//	return data.routes[0];
+			//} else {
+			//console.log("fail to read data.");s
+			//return [];
+			//}
+			//})
+			//.then(route => { return route.geometry.coordinates});
+			//.then(route => route.geometry.coordinates);
+			console.log("HTTP GET");
+			const json = await query.json();
+			const data = json.routes[0];
+			const route = data.geometry.coordinates;
+			console.log(route);
+			const geojson = {
+				type: "Feature",
+				properties: {},
+				geometry: {
+					type: "LineString",
+					coordinates: route,
+				},
+			};
+			console.log(geojson);
+			if (this.map.getSource("route") && this.map.getLayer("route")) {
+				console.log("already have rout");
+				this.map.getSource("route").setData(geojson);
+			} else {
+				console.log("add route layer");
+				this.map.addLayer({
+					id: "route",
+					type: "line",
+					source: {
+						type: "geojson",
+						data: geojson,
+					},
+					layout: {
+						"line-join": "round",
+						"line-cap": "round",
+					},
+					paint: {
+						"line-color": "#3887be",
+						"line-width": 5,
+						"line-opacity": 0.75,
+					},
+				});
+				const bounds = new mapboxGl.LngLatBounds(route[0], route[0]);
+				for (const coord of route) {
+					bounds.extend(coord);
+				}
+
+				this.map.fitBounds(bounds, {
+					padding: 20,
+				});
+				const instructions = document.getElementById("instructions");
+				instructions.innerHTML =
+					`<p><strong>(${start[0].toFixed(3)}, ${start[1].toFixed(
+						3
+					)}) -></strong></p><p><strong>(${end[0].toFixed(
+						3
+					)}, ${end[1].toFixed(3)})</strong></p>` +
+					`<p><strong>交通時間: ${Math.floor(
+						data.duration / 60
+					)} min </strong></p>` +
+					`<p><strong>交通距離: ${(data.distance / 1000).toFixed(
+						3
+					)} km </strong></p>`;
+			}
+			// add turn instructions here at the end
+		},
+		getCurrentLocation() {
+			const eventcontainer = [];
+			return new Promise((resolve, reject) => {
+				// 檢查瀏覽器是否支持 Geolocation API
+				let arr = [];
+				if (navigator.geolocation) {
+					// 如果支持，調用 getCurrentPosition 方法來獲取位置資訊
+					navigator.geolocation.getCurrentPosition(
+						// 成功時的回調函數，position 包含經緯度等位置資訊
+						function (position) {
+							const latitude = position.coords.latitude; // 緯度
+							const longitude = position.coords.longitude; // 經度
+							console.log(
+								"經度：" + longitude + "，緯度：" + latitude
+							);
+
+							arr.push(longitude, latitude);
+							// 將經緯度資訊以物件形式回傳
+							resolve(arr);
+						},
+						// 失敗時的回調函數
+						function (error) {
+							reject("無法獲取位置：" + error.message);
+						}
+					);
+				} else {
+					reject("瀏覽器不支持地理位置服務");
+				}
+			});
+		},
+		toggleAutoMode(state) {
+			let startPoint = null;
+			console.log(state);
+			let status = state;
+			console.log(status);
+			if (status === false) {
+				startPoint = null;
+				//this.map.off('click');
+				if (this.map.getLayer("point")) {
+					this.map.removeLayer("point");
+					this.map.removeSource("point");
+				}
+				if (this.map.getLayer("end")) {
+					this.map.removeLayer("end");
+					this.map.removeSource("end");
+				}
+				if (this.map.getLayer("route")) {
+					this.map.removeLayer("route");
+					this.map.removeSource("route");
+				}
+				/*if(this.map.getLayer(""))
+				this.map.on("click", (event) => {
+					this.getCurrentLocation().then((resolve) => {
+						// 將經緯度資訊存入 const
+						// 這裡可以使用經緯度資訊做任何你需要的事情
+						console.log(
+							"經度：" + resolve[0] + "，緯度：" + resolve[1]
+						);
+						if (this.map.getLayer("userlocation")) {
+							this.map.removeLayer("userlocation");
+						}
+						if (this.map.getSource("userlocation")) {
+							this.map.removeSource("userlocation");
+						}
+						this.map.addLayer({
+							id: "userlocation",
+							type: "circle",
+							source: {
+								type: "geojson",
+								data: {
+									type: "FeatureCollection",
+									features: [
+										{
+											type: "Feature",
+											properties: {},
+											geometry: {
+												type: "Point",
+												coordinates: resolve,
+											},
+										},
+									],
+								},
+							},
+							paint: {
+								"circle-radius": 10,
+								"circle-color": "#be3844",
+							},
+						});
+						const coords = Object.keys(event.lngLat).map(
+							(key) => event.lngLat[key]
+						);
+						const end = {
+							type: "FeatureCollection",
+							features: [
+								{
+									type: "Feature",
+									properties: {},
+									geometry: {
+										type: "Point",
+										coordinates: coords,
+									},
+								},
+							],
+						};
+						if (this.map.getLayer("end_point")) {
+							this.map.getSource("end_point").setData(end);
+						} else {
+							this.map.addLayer({
+								id: "end_point",
+								type: "circle",
+								source: {
+									type: "geojson",
+									data: {
+										type: "FeatureCollection",
+										features: [
+											{
+												type: "Feature",
+												properties: {},
+												geometry: {
+													type: "Point",
+													coordinates: coords,
+												},
+											},
+										],
+									},
+								},
+								paint: {
+									"circle-radius": 5,
+									"circle-color": "#f30",
+								},
+							});
+						}
+						this.getRoute(resolve, coords);
+					});	
+				});*/
+			} else if (status === true) {
+				// 手動模式：用戶手動選擇任意兩點進行路徑規劃
+
+				// 添加地圖點擊事件監聽器
+				this.map.on("click", (event) => {
+					const coords = Object.keys(event.lngLat).map(
+						(key) => event.lngLat[key]
+					);
+
+					if (!startPoint) {
+						console.log("first time ");
+						// 第一次點擊，標記起點
+						if (this.map.getLayer("point")) {
+							this.map.removeLayer("point");
+						}
+						if (this.map.getSource("point")) {
+							this.map.removeSource("point");
+						}
+						if (status) {
+							this.map.addLayer({
+								id: "point",
+								type: "circle",
+								source: {
+									type: "geojson",
+									data: {
+										type: "FeatureCollection",
+										features: [
+											{
+												type: "Feature",
+												properties: {},
+												geometry: {
+													type: "Point",
+													coordinates: coords,
+												},
+											},
+										],
+									},
+								},
+								paint: {
+									"circle-radius": 5,
+									"circle-color": "#be3844",
+								},
+							});
+						} else {
+							if (this.map.getLayer("point")) {
+								this.map.removeLayer("point");
+								this.map.removeSource("point");
+							}
+							if (this.map.getLayer("end")) {
+								this.map.removeLayer("end");
+								this.map.removeSource("end");
+							}
+							if (this.map.getLayer("route")) {
+								this.map.removeLayer("route");
+								this.map.removeSource("route");
+							}
+						}
+						startPoint = coords;
+						if (this.map.getLayer("route")) {
+							this.map.removeLayer("route");
+							this.map.removeSource("route");
+						}
+						if (this.map.getLayer("end")) {
+							this.map.removeLayer("end");
+							this.map.removeSource("end");
+						} else {
+						}
+					} else {
+						// 第二次點擊，標記終點並進行路徑規劃
+						const end = {
+							type: "FeatureCollection",
+							features: [
+								{
+									type: "Feature",
+									properties: {},
+									geometry: {
+										type: "Point",
+										coordinates: coords,
+									},
+								},
+							],
+						};
+						if (status) {
+							if (
+								this.map.getSource("end") &&
+								this.map.getLayer("end")
+							) {
+								this.map.getSource("end").setData(end);
+							} else {
+								this.map.addLayer({
+									id: "end",
+									type: "circle",
+									source: {
+										type: "geojson",
+										data: {
+											type: "FeatureCollection",
+											features: [
+												{
+													type: "Feature",
+													properties: {},
+													geometry: {
+														type: "Point",
+														coordinates: coords,
+													},
+												},
+											],
+										},
+									},
+									paint: {
+										"circle-radius": 5,
+										"circle-color": "#44be38",
+									},
+								});
+							}
+							this.getRoute(startPoint, coords);
+						} else {
+							if (this.map.getLayer("point")) {
+								this.map.removeLayer("point");
+								this.map.removeSource("point");
+							}
+							if (this.map.getLayer("end")) {
+								this.map.removeLayer("end");
+								this.map.removeSource("end");
+							}
+							if (this.map.getLayer("route")) {
+								this.map.removeLayer("route");
+								this.map.removeSource("route");
+							}
+						}
+						startPoint = null; // 重置起點
+					}
+				});
+			}
 		},
 	},
 });

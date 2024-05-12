@@ -112,32 +112,74 @@ func GetComponentHistoryData(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": "success", "data": chartData})
 }
 
-func GetComponentSurvyData(c *gin.Context) {
+
+func GetRoadData(c *gin.Context) {
 	// 1. Get the component id from the URL
+
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "Invalid component ID"})
 		return
 	}
 
-	timeFrom, timeTo := util.GetTime(c)
-
-	// 2. Get the history data query from the database
-	queryHistory, err := models.GetComponentHistoryDataQuery(id, timeFrom, timeTo)
-	if err != nil {
+	queryResult, err := models.GetRoadData(id)
+	if err != nil{
 		c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": err.Error()})
 		return
 	}
-	if queryHistory == "" {
-		c.JSON(http.StatusNotFound, gin.H{"status": "error", "message": "No history data available"})
+	if len(queryResult) == 0 || len(queryResult[0].Data) == 0 {
+		c.JSON(http.StatusNotFound, gin.H{"status": "error", "message": "No Road data available"})
 		return
 	}
-
-	// 3. Get and parse the history data
-	chartData, err := models.GetTimeSeriesData(&queryHistory, timeFrom, timeTo)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": err.Error()})
-		return
-	}
-	c.JSON(http.StatusOK, gin.H{"status": "success", "data": chartData})
+	
+	c.JSON(http.StatusOK, gin.H{"status": "success", "data": queryResult})
 }
+
+func GetNameData(c *gin.Context) {
+
+	queryResult, err := models.GetNameData()
+	if err != nil{
+		c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": err.Error()})
+		return
+	}
+	if len(queryResult) == 0 || len(queryResult[0].Town) == 0 {
+		c.JSON(http.StatusNotFound, gin.H{"status": "error", "message": "No Road data available"})
+		return
+	}
+	
+	c.JSON(http.StatusOK, gin.H{"status": "success", "data": queryResult})
+}
+
+// 半成品
+// func UpdateData(c *gin.Context) {
+
+// 	id, err := strconv.Atoi(c.Param("id"))
+// 	if err != nil {
+// 		c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "Invalid component ID"})
+// 		return
+// 	}
+// 	var req models.UpdateDataRequest
+
+// 	switch id {
+// 		case 0:
+// 			err = c.ShouldBindJSON(&req)
+// 			if err != nil {
+// 				c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": err.Error()})
+// 				return
+// 			}
+// 			if req == (models.UpdateDataRequest{}) {
+// 				// req 為零值
+// 				c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "Doesn't catch data"})
+// 				return
+// 			}
+// 			if err := models.UpdateRainfalldata(req); err != nil{
+// 				c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": err.Error()})
+// 				return
+// 			}
+			
+// 		default:
+// 			c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "Invalid component ID"})
+// 			return
+// 	}
+// 	c.JSON(http.StatusOK, gin.H{"status": "success"})
+// }

@@ -42,6 +42,31 @@ type TwoDimensionalDataOutput struct {
 	Data []TwoDimensionalData `json:"data"`
 }
 
+type OneDimensionalData struct {
+	Town string `gorm:"column:town" json:"town"`
+}
+
+type MyData struct {
+	Xaxis string `gorm:"column:place_name" json:"place_name"`
+	Data string `gorm:"column:town" json:"town"`
+}
+type MyDataOutput struct {
+	Data []MyData `json:"data"`
+}
+
+
+type UpdateDataRequest struct {
+	townname	string	`json: "town_name"`
+	stationname   string    `json: "station_name"`
+	stationlongitude   float32    `json: "station_longitude"`
+	stationlatitude   float32    `json: "station_latitude"`
+	past10min   float32    `json: "past_10_min"`
+	past1hr   float32    `json: "past_1_hr"`
+	past3hr   float32    `json: "past_3_hr"`
+	past24hr   float32    `json: "past_24_hr"`
+	datetime   string    `json: "date_time"`
+}
+
 /*
 ThreeDimensionalData & PercentData Json Format:
 
@@ -342,64 +367,112 @@ func GetMapLegendData(query *string, timeFrom string, timeTo string) (chartData 
 	return chartData, nil
 }
 
-func GetComponentSurveyDataQuery(id int, timeFrom string, timeTo string) (queryHistory string, err error) {
-	var historyDataQuery HistoryDataQuery
-
-	err = DBManager.
-		Table("components").
-		Select("query_history").
-		Where("components.id = ?", id).
-		Find(&historyDataQuery).Error
-	if err != nil {
-		return queryHistory, err
-	}
-	if historyDataQuery.QueryHistory == "" {
-		return historyDataQuery.QueryHistory, err
-	}
-
-	var timeStepUnit string
-
-	timeFromTime, err := time.Parse("2006-01-02T15:04:05+08:00", timeFrom)
-	if err != nil {
-		return queryHistory, err
-	}
-	timeToTime, err := time.Parse("2006-01-02T15:04:05+08:00", timeTo)
-	if err != nil {
-		return queryHistory, err
-	}
-
-	/*
-			timesteps are automatically determined based on the time range:
-		  - Within 24hrs: hour
-		  - Within 1 month: day
-		  - Within 3 months: week
-		  - Within 2 years: month
-		  - More than 2 years: year
-	*/
-	if timeToTime.Sub(timeFromTime).Hours() <= 24 {
-		timeStepUnit = "hour" // Within 24hrs
-	} else if timeToTime.Sub(timeFromTime).Hours() < 24*32 {
-		timeStepUnit = "day" // Within 1 month
-	} else if timeToTime.Sub(timeFromTime).Hours() < 24*93 {
-		timeStepUnit = "week" // Within 3 months
-	} else if timeToTime.Sub(timeFromTime).Hours() < 24*740 {
-		timeStepUnit = "month" // Within 2 years
-	} else {
-		timeStepUnit = "year" // More than 2 years
-	}
-
-	// Insert the time range and timestep unit into the query
-	var queryInsertStrings []any
-
-	if strings.Count(historyDataQuery.QueryHistory, "%s")%3 != 0 {
-		return queryHistory, fmt.Errorf("invalid query string")
-	}
-
-	for i := 0; i < strings.Count(historyDataQuery.QueryHistory, "%s")/3; i++ {
-		queryInsertStrings = append(queryInsertStrings, timeStepUnit, timeFrom, timeTo)
-	}
-
-	historyDataQuery.QueryHistory = fmt.Sprintf(historyDataQuery.QueryHistory, queryInsertStrings...)
-
-	return historyDataQuery.QueryHistory, nil
+func GetNameData() (roadOutput []OneDimensionalData, err error) {
+    var result []OneDimensionalData
+    
+    db := DBDashboard.Table("Taipei_Road").Select("DISTINCT town")
+    if err := db.Find(&result).Error; err != nil {
+        return nil, err
+    }
+    
+    return result, nil
 }
+
+
+
+func GetRoadData(id int) (roadOutput []MyDataOutput, err error) {
+	var road []MyData
+	
+	// 從資料庫中擷取數據
+	switch id {
+		case 0:		// 北投區
+			err := DBDashboard.Table("Taipei_Road").Select("place_name","town").Where("town = ?", "北投區").Find(&road).Error
+			if err != nil {
+				return nil, err
+			}
+		case 1:		// 士林區
+			err := DBDashboard.Table("Taipei_Road").Select("place_name","town").Where("town = ?", "士林區").Find(&road).Error
+			if err != nil {
+				return nil, err
+			}
+		case 2:		// 內湖區
+			err := DBDashboard.Table("Taipei_Road").Select("place_name","town").Where("town = ?", "內湖區").Find(&road).Error
+			if err != nil {
+				return nil, err
+			}
+		case 3:		//南港區
+			err := DBDashboard.Table("Taipei_Road").Select("place_name","town").Where("town = ?", "南港區").Find(&road).Error
+			if err != nil {
+				return nil, err
+			}
+		case 4:		// 松山區
+			err := DBDashboard.Table("Taipei_Road").Select("place_name","town").Where("town = ?", "松山區").Find(&road).Error
+			if err != nil {
+				return nil, err
+			}
+		case 5:		// 信義區
+			err := DBDashboard.Table("Taipei_Road").Select("place_name","town").Where("town = ?", "信義區").Find(&road).Error
+			if err != nil {
+				return nil, err
+			}
+		case 6:		// 中山區
+			err := DBDashboard.Table("Taipei_Road").Select("place_name","town").Where("town = ?", "中山區").Find(&road).Error
+			if err != nil {
+				return nil, err
+			}
+		case 7:		// 大同區
+			err := DBDashboard.Table("Taipei_Road").Select("place_name","town").Where("town = ?", "大同區").Find(&road).Error
+			if err != nil {
+				return nil, err
+			}
+		case 8:		// 中正區
+			err := DBDashboard.Table("Taipei_Road").Select("place_name","town").Where("town = ?", "中正區").Find(&road).Error
+			if err != nil {
+				return nil, err
+			}
+		case 9:		// 萬華區
+			err := DBDashboard.Table("Taipei_Road").Select("place_name","town").Where("town = ?", "萬華區").Find(&road).Error
+			if err != nil {
+				return nil, err
+			}
+		case 10:	//大安區
+			err := DBDashboard.Table("Taipei_Road").Select("place_name","town").Where("town = ?", "大安區").Find(&road).Error
+			if err != nil {
+				return nil, err
+			}
+		case 11:	// 文山區
+			err := DBDashboard.Table("Taipei_Road").Select("place_name","town").Where("town = ?", "文山區").Find(&road).Error
+			if err != nil {
+				return nil, err
+			}
+	}
+	roadOutput = append(roadOutput, MyDataOutput{Data: road})
+
+	return roadOutput, nil
+}
+
+// 半成品
+// func UpdateRainfalldata(input UpdateDataRequest) error {
+	
+// 	var existingRecord UpdateDataRequest
+//     if err := DBDashboard.Table("taipei_rainfall").Where("station_name = ?", input.stationname).FirstOrCreate(&existingRecord, input).Error; err != nil {
+//         return err
+//     }
+
+//     if existingRecord.stationname != "" {
+// 		existingRecord.townname = input.townname
+// 		existingRecord.stationlatitude = input.stationlatitude
+// 		existingRecord.stationlongitude = input.stationlongitude
+// 		existingRecord.past10min = input.past10min
+// 		existingRecord.past1hr = input.past1hr
+// 		existingRecord.past3hr = input.past3hr
+// 		existingRecord.past24hr = input.past24hr
+// 		existingRecord.datetime = input.datetime
+
+//         if err := DBDashboard.Save(&existingRecord).Error; err != nil {
+//             return err
+//         }
+//     }
+
+//     return nil
+// }
