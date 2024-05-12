@@ -1057,6 +1057,17 @@ export const useMapStore = defineStore("map", {
 						"line-opacity": 0.75,
 					},
 				});
+				const bounds = new mapboxGl.LngLatBounds(
+					route[0],
+					route[0]
+				);
+				for (const coord of route) {
+					bounds.extend(coord);
+				}
+	
+				this.map.fitBounds(bounds, {
+					padding: 20
+				});
 			}
 			// add turn instructions here at the end
 		},
